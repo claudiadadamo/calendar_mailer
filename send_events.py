@@ -1,18 +1,20 @@
-from __future__ import print_function
+"""
+Create a digest of events from a calendar and send to recipients.
+TODO: refactor into a class, it would be cleaner.
+"""
+
 import httplib2
 import os
-
-from apiclient import discovery
+import sys
 import oauth2client
-from oauth2client import client
-from oauth2client import tools
-import pytz
-import datetime, dateutil.parser
-import sqlite3 as lite
-import time
 
+import datetime, dateutil.parser
 import smtplib
 import ConfigParser
+
+from apiclient import discovery
+from oauth2client import client
+from oauth2client import tools
 
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
@@ -33,7 +35,6 @@ def parse_config(filename):
     for section in parser.sections():
         cfg[section] = dict(parser.items(section))
     return cfg
-        
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -60,7 +61,7 @@ def get_credentials():
             credentials = tools.run_flow(flow, store, flags)
         else: # Needed only for compatibility with Python 2.6
             credentials = tools.run(flow, store)
-        print('Storing credentials to ' + credential_path)
+        print 'Storing credentials to ' + credential_path
     return credentials
 
 def get_events(cfg):
@@ -71,7 +72,7 @@ def get_events(cfg):
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+    now = datetime.datetime.utcnow().isoformat() + 'Z' # UTC time
     calendar_url = cfg['calendar']['calendarid'] + '@group.calendar.google.com'
     eventsResult = service.events().list(
         calendarId=calendar_url, timeMin=now, singleEvents=True,
@@ -179,18 +180,20 @@ def send_email(events, cfg):
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('--no-email', action='store_true', default=False)
+
+    argparser.add_argument('--no-email', action='store_true', default=False,
+            help='write message to screen instead of sending email.')
     args = argparser.parse_args()
 
     cfg = parse_config('calendar.cfg')
     events = get_events(cfg)
     if not events:
-        print('No events found!')
+        sys.stdout.write('No events found!')
     else:
         parsed_events = parse_events(events)
         message = generate_message(parsed_events)
 
         if args.no_email:
-            print(message)
+            sys.stdout.write(message + '\n')
         else:
             send_email(message, cfg)
