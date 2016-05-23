@@ -86,9 +86,6 @@ def convert_date_hours(date_string):
         6/4 7:00 PM
     """
     date = datetime.datetime.strptime(date_string[:19],"%Y-%m-%dT%H:%M:%S")
-
-    #TODO: spend more time figuring out why this is 3 hours off.
-    date = date + datetime.timedelta(hours=3)
     date = datetime.datetime.strftime(date, "%-m/%-d %-I:%M %p")
     return date
 
@@ -99,9 +96,6 @@ def convert_date_no_hours(date_string):
         6/4
     """
     date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
-    
-    #TODO: spend more time figuring out why this is 3 hours off.
-    date = date + datetime.timedelta(hours=3)
     date = datetime.datetime.strftime(date, "%-m/%-d") 
     return date
 
@@ -151,7 +145,7 @@ def generate_message(events):
     """
     Generate string of email message
     """
-    #TODO: this should be made more broad so that someone could enter their own email.
+    #TODO: this should be made more broad so that someone could enter their own email body.
     todays_date = datetime.datetime.now().strftime("%-m/%-d")
     
     event_string = "\n".join(["\t".join(i) for i in events])
